@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>少儿编程课程学习行为数据分析</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f0f2f5; color: #333; }
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 30px 20px; text-align: center; }
+.header h1 { font-size: 24px; margin-bottom: 8px; }
+.header p { font-size: 14px; opacity: 0.9; }
+.stats { display: flex; flex-wrap: wrap; gap: 12px; padding: 20px; max-width: 1400px; margin: 0 auto; }
+.stat-card { flex: 1; min-width: 140px; background: #fff; border-radius: 10px; padding: 18px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.stat-card .num { font-size: 28px; font-weight: bold; color: #667eea; }
+.stat-card .label { font-size: 13px; color: #888; margin-top: 4px; }
+.charts { display: flex; flex-wrap: wrap; gap: 16px; padding: 0 20px 30px; max-width: 1400px; margin: 0 auto; }
+.chart-box { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.chart-box h3 { font-size: 15px; margin-bottom: 10px; color: #444; }
+.chart-box .chart { width: 100%; height: 320px; }
+.w100 { width: 100%; }
+.w50 { width: calc(50% - 8px); }
+.w33 { width: calc(33.33% - 11px); }
+@media (max-width: 900px) { .w50, .w33 { width: 100%; } }
+.footer { text-align: center; padding: 20px; color: #aaa; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>少儿编程课程学习行为数据处理与分析</h1>
+  <p>数据处理综合训练 · 交互式数据看板</p>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="charts">
+  <div class="chart-box w100"><h3>📊 各年龄段课程类型偏好</h3><div class="chart" id="chart1"></div></div>
+  <div class="chart-box w50"><h3>📅 一周学习活跃度</h3><div class="chart" id="chart2"></div></div>
+  <div class="chart-box w50"><h3>🎯 年龄段完成率与平均得分</h3><div class="chart" id="chart3"></div></div>
+  <div class="chart-box w33"><h3>📚 课程类别效果对比</h3><div class="chart" id="chart4"></div></div>
+  <div class="chart-box w33"><h3>📝 作业提交状态</h3><div class="chart" id="chart5"></div></div>
+  <div class="chart-box w33"><h3>⏳ 课程完成状态</h3><div class="chart" id="chart6"></div></div>
+  <div class="chart-box w50"><h3>👥 各年龄段学生人数</h3><div class="chart" id="chart7"></div></div>
+  <div class="chart-box w50"><h3>📐 课程难度分布</h3><div class="chart" id="chart8"></div></div>
+</div>
+
+<div class="footer">数据处理综合训练 · 2026</div>
+
+<script>
+// ========== 数据 ==========
+const data = {
+  ageCourse: {"categories":["中龄(9-10岁)","低龄(7-8岁)","学龄(11-12岁)","少年(13-14岁)","青少年(15-16岁)"],"series":[{"name":"代码编程","data":[122,138,163,127,130]},{"name":"图形化","data":[56,87,83,65,63]},{"name":"机器人","data":[30,37,40,39,40]}]},
+  week: {"labels":["周一","周二","周三","周四","周五","周六","周日"],"data":[98,118,97,103,116,519,169]},
+  ageScore: {"labels":["低龄(7-8岁)","中龄(9-10岁)","学龄(11-12岁)","少年(13-14岁)","青少年(15-16岁)"],"rate":[73.3,70.2,74.1,72.3,67.8],"score":[73.0,74.7,75.9,75.0,77.3]},
+  catStats: {"labels":["图形化","代码编程","机器人"],"score":[75.3,75.4,73.9],"lines":[29.6,30.0,29.1]},
+  submission: {"labels":["已提交","迟交","未提交","需重做"],"data":[566,90,80,64]},
+  completion: {"labels":["已完成","未完成","进行中"],"data":[862,245,98]},
+  difficulty: {"labels":["中级","初级","高级","竞赛","入门"],"data":[7,6,4,2,1]},
+  students: {"labels":["低龄(7-8岁)","中龄(9-10岁)","学龄(11-12岁)","少年(13-14岁)","青少年(15-16岁)"],"data":[40,35,45,39,42]},
+  total: {"students":201,"records":1205,"courses":20,"assignments":800,"attendance":1000,"completion_rate":71.5,"avg_score":75.2,"attendance_rate":84.0}
+};
+
+// ========== 统计卡片 ==========
+const cards = [
+  {n: data.total.students, l: '学生人数'}, {n: data.total.records, l: '学习记录'},
+  {n: data.total.avg_score, l: '平均得分'}, {n: data.total.completion_rate+'%', l: '课程完成率'},
+  {n: data.total.attendance_rate+'%', l: '出勤率'}, {n: data.total.assignments, l: '作业提交'}
+];
+document.getElementById('stats').innerHTML = cards.map(c => '<div class="stat-card"><div class="num">'+c.n+'</div><div class="label">'+c.l+'</div></div>').join('');
+
+// ========== 颜色 ==========
+const colors = ['#5470C6','#91CC75','#FAC858','#EE6666','#73C0DE','#3BA272','#FC8452','#9A60B4'];
+
+// ========== 通用配置 ==========
+const tooltip = { trigger: 'axis', axisPointer: { type: 'shadow' } };
+
+// ========== 图表1: 年龄段课程偏好 ==========
+echarts.init(document.getElementById('chart1')).setOption({
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  legend: { data: data.ageCourse.series.map(s=>s.name), bottom: 0 },
+  grid: { left: '10%', right: '5%', bottom: '20%', top: '5%' },
+  xAxis: { type: 'category', data: data.ageCourse.categories, axisLabel: { rotate: 15 } },
+  yAxis: { type: 'value', name: '学习次数' },
+  series: data.ageCourse.series.map((s,i)=>({ name: s.name, type: 'bar', stack: 'total', data: s.data, itemStyle: { color: colors[i] } }))
+});
+
+// ========== 图表2: 周活跃度 ==========
+const chart2 = echarts.init(document.getElementById('chart2'));
+chart2.setOption({
+  tooltip: { trigger: 'axis' },
+  grid: { left: '10%', right: '5%', bottom: '15%', top: '5%' },
+  xAxis: { type: 'category', data: data.week.labels },
+  yAxis: { type: 'value', name: '学习次数' },
+  series: [{
+    type: 'bar',
+    data: data.week.data.map((v,i)=>({ value: v, itemStyle: { color: i>=5 ? '#EE6666' : '#5470C6' } })),
+    label: { show: true, position: 'top', fontWeight: 'bold' }
+  }]
+});
+
+// ========== 图表3: 年龄段完成率与得分 ==========
+const chart3 = echarts.init(document.getElementById('chart3'));
+chart3.setOption({
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['完成率(%)','平均得分'], bottom: 0 },
+  grid: { left: '10%', right: '12%', bottom: '20%', top: '5%' },
+  xAxis: { type: 'category', data: data.ageScore.labels, axisLabel: { rotate: 15 } },
+  yAxis: [
+    { type: 'value', name: '完成率(%)', min: 0, max: 100 },
+    { type: 'value', name: '平均得分', min: 0, max: 100 }
+  ],
+  series: [
+    { name: '完成率(%)', type: 'bar', data: data.ageScore.rate, label: { show: true, position: 'top', formatter: '{c}%' } },
+    { name: '平均得分', type: 'line', yAxisIndex: 1, data: data.ageScore.score, label: { show: true }, lineStyle: { width: 3 }, symbolSize: 8 }
+  ]
+});
+
+// ========== 图表4: 课程类别 ==========
+echarts.init(document.getElementById('chart4')).setOption({
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['平均得分','平均代码行数'], bottom: 0 },
+  grid: { left: '10%', right: '10%', bottom: '20%', top: '5%' },
+  xAxis: { type: 'category', data: data.catStats.labels },
+  yAxis: [
+    { type: 'value', name: '平均得分', min: 0, max: 100 },
+    { type: 'value', name: '代码行数' }
+  ],
+  series: [
+    { name: '平均得分', type: 'bar', data: data.catStats.score, itemStyle: { color: '#5470C6' } },
+    { name: '平均代码行数', type: 'bar', yAxisIndex: 1, data: data.catStats.lines, itemStyle: { color: '#91CC75' } }
+  ]
+});
+
+// ========== 图表5: 作业提交 ==========
+echarts.init(document.getElementById('chart5')).setOption({
+  tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+  legend: { bottom: 0 },
+  series: [{
+    type: 'pie', radius: ['30%','60%'], center: ['50%','45%'],
+    data: data.submission.labels.map((l,i)=>({ name: l, value: data.submission.data[i], itemStyle: { color: colors[i] } })),
+    label: { formatter: '{b}\n{d}%' }
+  }]
+});
+
+// ========== 图表6: 完成状态 ==========
+echarts.init(document.getElementById('chart6')).setOption({
+  tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+  legend: { bottom: 0 },
+  series: [{
+    type: 'pie', radius: ['30%','60%'], center: ['50%','45%'],
+    data: data.completion.labels.map((l,i)=>({ name: l, value: data.completion.data[i], itemStyle: { color: colors.slice(1)[i] } })),
+    label: { formatter: '{b}\n{d}%' }
+  }]
+});
+
+// ========== 图表7: 年龄段人数 ==========
+echarts.init(document.getElementById('chart7')).setOption({
+  tooltip: { trigger: 'axis' },
+  grid: { left: '10%', right: '5%', bottom: '15%', top: '5%' },
+  xAxis: { type: 'category', data: data.students.labels, axisLabel: { rotate: 15 } },
+  yAxis: { type: 'value', name: '人数' },
+  series: [{ type: 'bar', data: data.students.data, itemStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#667eea'},{offset:1,color:'#764ba2'}]) }, label: { show: true, position: 'top' } }]
+});
+
+// ========== 图表8: 课程难度 ==========
+echarts.init(document.getElementById('chart8')).setOption({
+  tooltip: { trigger: 'item', formatter: '{b}: {c} 门 ({d}%)' },
+  legend: { bottom: 0 },
+  series: [{
+    type: 'pie', radius: ['30%','60%'], center: ['50%','45%'],
+    data: data.difficulty.labels.map((l,i)=>({ name: l, value: data.difficulty.data[i], itemStyle: { color: colors[i] } })),
+    label: { formatter: '{b}\n{d}%' }
+  }]
+});
+
+// ========== 自适应 ==========
+window.addEventListener('resize', ()=>{
+  document.querySelectorAll('.chart').forEach(el => {
+    const instance = echarts.getInstanceByDom(el);
+    instance && instance.resize();
+  });
+});
+</script>
+</body>
+</html>
