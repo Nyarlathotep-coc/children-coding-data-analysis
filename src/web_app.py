@@ -4,6 +4,7 @@ from flask import Flask, render_template, jsonify, session
 import pandas as pd
 import numpy as np
 import random
+import time
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -17,7 +18,7 @@ _cache = {'data': {}, 'cleaned': {}, 'features': {}, 'analysis': {}}
 
 # ==================== 1. 获取数据 ====================
 def generate_all_data():
-    np.random.seed(42); random.seed(42)
+    seed_val = int(time.time() * 1000) % 100000; np.random.seed(seed_val); random.seed(seed_val)
     first = ['子涵','梓涵','一诺','浩宇','欣怡','子轩','思远','雨桐','明哲','嘉琪','天佑','诗涵','俊杰','雅琪','致远','思琪','宇航','艺涵','博文','雨萱','昊然','若曦','鹏飞','子墨','宇轩','悦然','文博','梓萱','皓轩']
     last = ['王','李','张','刘','陈','杨','赵','黄','周','吴','徐','孙','马','朱','胡','郭','何','高','林','罗','郑','梁','谢','宋','唐','韩','冯','董','程','曹']
     students = []
@@ -54,7 +55,7 @@ def generate_all_data():
     ], columns=['course_id','course_name','category','difficulty','duration_weeks','lessons_count'])
     courses.to_csv(os.path.join(DATA_DIR, 'courses.csv'), index=False, encoding='utf-8-sig')
 
-    np.random.seed(42); random.seed(42)
+    seed_val = int(time.time() * 1000) % 100000; np.random.seed(seed_val); random.seed(seed_val)
     sids = df_stu['student_id'].dropna().tolist()
     cids = courses['course_id'].tolist()
     cl = {r['course_id']: list(range(1,r['lessons_count']+1)) for _,r in courses.iterrows()}
@@ -75,11 +76,11 @@ def generate_all_data():
     for _ in range(5): df_rec = pd.concat([df_rec, df_rec.sample(1)], ignore_index=True)
     df_rec.to_csv(os.path.join(DATA_DIR, 'learning_records.csv'), index=False, encoding='utf-8-sig')
 
-    np.random.seed(42); random.seed(42)
+    seed_val = int(time.time() * 1000) % 100000; np.random.seed(seed_val); random.seed(seed_val)
     atypes = ['选择题','填空题','编程题','项目作品','思维导图']
     sd2, ed2 = datetime(2025,9,15), datetime(2026,6,10)
     asgn = []
-    np.random.seed(42); random.seed(42)
+    seed_val = int(time.time() * 1000) % 100000; np.random.seed(seed_val); random.seed(seed_val)
     atd = []
     for i in range(1, 1001):
         d0 = sd2+timedelta(days=random.randint(0,280))
