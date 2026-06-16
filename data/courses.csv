@@ -1,0 +1,21 @@
+﻿course_id,course_name,category,difficulty,duration_weeks,lessons_count
+SCR001,Scratch趣味编程入门,图形化编程,入门,8,16
+SCR002,Scratch动画制作,图形化编程,初级,6,12
+SCR003,Scratch游戏设计,图形化编程,初级,8,16
+SCR004,Scratch高级项目,图形化编程,中级,8,16
+PYT001,Python编程基础,代码编程,初级,10,20
+PYT002,Python数据结构入门,代码编程,中级,8,16
+PYT003,Python游戏开发,代码编程,中级,10,20
+PYT004,Python数据分析入门,代码编程,高级,8,16
+PYT005,Python人工智能基础,代码编程,高级,10,20
+PYT006,Python网络爬虫,代码编程,高级,6,12
+EVT001,EV3机器人基础,机器人编程,初级,8,16
+EVT002,EV3机器人进阶,机器人编程,中级,8,16
+EVT003,VEX机器人竞赛,机器人编程,竞赛,12,24
+WEB001,HTML/CSS网页设计,代码编程,初级,6,12
+WEB002,JavaScript编程基础,代码编程,中级,8,16
+APP001,App Inventor手机编程,图形化编程,初级,6,12
+APP002,App Inventor高级应用,图形化编程,中级,8,16
+CPP001,C++编程基础,代码编程,中级,10,20
+CPP002,C++算法入门,代码编程,高级,10,20
+CPP003,信息学竞赛集训,代码编程,竞赛,12,24
