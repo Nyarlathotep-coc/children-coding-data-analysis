@@ -1,0 +1,239 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>少儿编程课程学习行为数据分析系统</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:#f0f2f5;color:#333}
+.header{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:25px 20px;text-align:center}
+.header h1{font-size:26px;margin-bottom:4px}
+.header p{font-size:14px;opacity:.85}
+.steps-nav{display:flex;background:#fff;border-bottom:1px solid #e8e8e8;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.step-tab{padding:14px 18px;cursor:pointer;font-size:13px;color:#888;border-bottom:3px solid transparent;transition:all .3s;flex:1;text-align:center}
+.step-tab:hover{color:#667eea;background:#f8f9ff}
+.step-tab.active{color:#667eea;border-bottom-color:#667eea;font-weight:bold}
+.step-tab .num{display:inline-block;width:22px;height:22px;line-height:22px;border-radius:50%;background:#e8e8e8;color:#888;text-align:center;margin-right:6px;font-size:12px;font-weight:bold}
+.step-tab.active .num{background:#667eea;color:#fff}
+.content{max-width:1200px;margin:0 auto;padding:24px 20px}
+.step-panel{display:none}
+.step-panel.active{display:block}
+.panel-header{margin-bottom:16px}
+.panel-header h2{font-size:20px;color:#444;margin-bottom:4px}
+.panel-header p{font-size:13px;color:#999}
+.btn{padding:10px 28px;border:none;border-radius:6px;font-size:14px;cursor:pointer;transition:all .3s;font-weight:bold}
+.btn-primary{background:#667eea;color:#fff}
+.btn-primary:hover{background:#5a6fd6;transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,.3)}
+.btn-primary:disabled{background:#b0b8e0;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-success{background:#52c41a;color:#fff}
+.btn-success:hover{background:#45b015}
+.result-area{margin-top:16px;border-radius:10px;background:#fff;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:none}
+.result-area.show{display:block}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+th,td{padding:8px 12px;text-align:left;border-bottom:1px solid #f0f0f0}
+th{background:#fafafa;font-weight:600;color:#555}
+tr:hover{background:#f8f9ff}
+.card-grid{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+.card{flex:1;min-width:120px;background:#f8f9ff;border-radius:8px;padding:16px;text-align:center}
+.card .num{font-size:26px;font-weight:bold;color:#667eea}
+.card .label{font-size:12px;color:#888;margin-top:4px}
+.issue-list{list-style:none;padding:0}
+.issue-list li{padding:8px 12px;border-left:3px solid;margin:6px 0;background:#fff8f8;border-color:#ff4d4f;font-size:13px}
+.issue-list li.done{background:#f6ffed;border-color:#52c41a}
+.chart-box{width:100%;height:360px;margin:12px 0}
+.feature-grid{display:flex;flex-wrap:wrap;gap:10px}
+.feature-card{flex:0 0 calc(33.33% - 8px);background:#f8f9ff;border-radius:8px;padding:14px;min-width:200px}
+.feature-card h4{font-size:14px;color:#444;margin-bottom:4px}
+.feature-card p{font-size:12px;color:#888}
+.feature-card .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;margin-top:4px}
+.tag-cat{background:#e6f7ff;color:#1890ff}
+.tag-bool{background:#f6ffed;color:#52c41a}
+.loading{display:inline-block;width:16px;height:16px;border:2px solid #667eea;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.preview-grid{display:flex;flex-wrap:wrap;gap:16px}
+.preview-table{flex:1;min-width:300px;overflow-x:auto}
+.preview-table h4{font-size:14px;color:#555;margin:8px 0 4px}
+.preview-table .meta{font-size:12px;color:#999;margin-bottom:8px}
+.status-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:bold}
+.badge-ready{background:#f6ffed;color:#52c41a}
+.badge-wait{background:#fff7e6;color:#fa8c16}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>少儿编程课程学习行为数据处理与分析</h1>
+  <p>数据处理综合训练 · 交互式分析系统</p>
+</div>
+<div class="steps-nav" id="stepNav"></div>
+<div class="content" id="content"></div>
+
+<script>
+const steps = [
+  {id:'step1',title:'获取数据',desc:'生成模拟的少儿编程课程学习行为数据'},
+  {id:'step2',title:'读取数据',desc:'加载CSV文件并预览数据'},
+  {id:'step3',title:'数据清洗',desc:'检查数据质量并处理缺失值、异常值、重复值'},
+  {id:'step4',title:'构造特征',desc:'创建新的分析维度字段'},
+  {id:'step5',title:'分析可视化',desc:'统计分析并生成交互式图表'}
+];
+let currentStep = 0, charts = [];
+
+// 导航
+function renderNav(){
+  document.getElementById('stepNav').innerHTML = steps.map((s,i)=>`
+    <div class="step-tab ${i===currentStep?'active':''}" onclick="switchStep(${i})">
+      <span class="num">${i+1}</span> ${s.title}
+    </div>
+  `).join('');
+}
+function switchStep(i){ currentStep=i; renderNav(); renderContent(); }
+function renderContent(){
+  const s=steps[currentStep];
+  document.getElementById('content').innerHTML = `
+    <div class="panel-header"><h2>${s.title}</h2><p>${s.desc}</p></div>
+    <button class="btn btn-primary" id="runBtn" onclick="runStep()">▶ 执行 ${s.title}</button>
+    <div class="result-area" id="resultArea"></div>
+  `;
+}
+renderNav(); renderContent();
+
+function showResult(html){ 
+  const el=document.getElementById('resultArea');
+  el.innerHTML=html; el.classList.add('show');
+}
+function showLoading(){
+  document.getElementById('runBtn').disabled=true;
+  document.getElementById('runBtn').innerHTML='<span class="loading"></span> 处理中...';
+}
+function hideLoading(){
+  document.getElementById('runBtn').disabled=false;
+  document.getElementById('runBtn').innerHTML='▶ 执行 '+steps[currentStep].title;
+}
+
+// 步骤执行
+async function runStep(){
+  showLoading();
+  try{
+    const res=await fetch('/api/step'+(currentStep+1),{method:'POST'});
+    const data=await res.json();
+    if(!data.success) throw new Error('处理失败');
+    if(currentStep===0) renderStep1(data.data);
+    else if(currentStep===1) renderStep2(data.data);
+    else if(currentStep===2) renderStep3(data);
+    else if(currentStep===3) renderStep4(data);
+    else if(currentStep===4) renderStep5(data.data);
+  }catch(e){ showResult('<div style="color:#ff4d4f">❌ 出错: '+e.message+'</div>'); }
+  hideLoading();
+}
+
+// Step 1: 获取数据
+function renderStep1(d){
+  let html='<div class="card-grid">'+d.files.map(f=>`<div class="card"><div class="num">${f.rows}</div><div class="label">${f.name}<br><span style="font-size:11px;color:#aaa">${f.cols} 个字段</span></div></div>`).join('')+'</div>';
+  html+='<p style="color:#52c41a;font-weight:bold;margin-top:8px">✅ 5 个 CSV 文件已生成至 data/ 目录</p>';
+  showResult(html);
+}
+
+// Step 2: 读取数据
+function renderStep2(d){
+  let html='<div class="preview-grid">';
+  for(const[name,t]of Object.entries(d)){
+    html+=`<div class="preview-table"><h4>📄 ${name}.csv</h4><div class="meta">${t.rows} 行 × ${t.columns.length} 列</div>
+    <table><thead><tr>${t.columns.map(c=>'<th>'+c+'</th>').join('')}</tr></thead><tbody>`;
+    t.head.forEach(r=>{html+='<tr>'+t.columns.map(c=>'<td>'+(r[c]??'')+'</td>').join('')+'</tr>'});
+    html+='</tbody></table></div>';
+  }
+  html+='</div>';
+  showResult(html);
+}
+
+// Step 3: 数据清洗
+function renderStep3(d){
+  let html=`
+    <div class="card-grid">
+      <div class="card"><div class="num" style="color:#ff4d4f">${d.issue_count}</div><div class="label">发现数据质量问题</div></div>
+      <div class="card"><div class="num" style="color:#52c41a">${d.action_count}</div><div class="label">已执行清洗操作</div></div>
+    </div>
+    <h4 style="margin:12px 0 6px">🔍 发现的数据质量问题</h4>
+    <ul class="issue-list">${d.issues.map(i=>'<li>⚠️ '+i+'</li>').join('')}</ul>
+    <h4 style="margin:12px 0 6px">✅ 执行的清洗操作</h4>
+    <ul class="issue-list">${d.actions.map(a=>'<li class="done">✔ '+a+'</li>').join('')}</ul>
+  `;
+  showResult(html);
+}
+
+// Step 4: 构造特征
+function renderStep4(d){
+  let html=`<div class="card-grid"><div class="card"><div class="num">${d.count}</div><div class="label">新构造的分析特征</div></div></div>
+  <div class="feature-grid">`;
+  d.features.forEach(f=>{
+    const tagClass=f.type==='类别'?'tag-cat':'tag-bool';
+    html+=`<div class="feature-card"><h4>${f.name}</h4><p>${f.desc}</p><span class="tag ${tagClass}">${f.type}</span></div>`;
+  });
+  html+='</div>';
+  showResult(html);
+}
+
+// Step 5: 分析可视化
+function renderStep5(d){
+  let html='<div class="card-grid">'+
+    `<div class="card"><div class="num">${d.total.students}</div><div class="label">学生总数</div></div>`+
+    `<div class="card"><div class="num">${d.total.records}</div><div class="label">学习记录</div></div>`+
+    `<div class="card"><div class="num">${d.total.completion_rate}%</div><div class="label">课程完成率</div></div>`+
+    `<div class="card"><div class="num">${d.total.avg_score}</div><div class="label">平均得分</div></div>`+
+  '</div>';
+  html+='<div id="chartContainer" style="position:relative">';
+  html+='<h4>📊 各年龄段课程类型偏好</h4><div id="chart1" class="chart-box"></div>';
+  html+='<h4>📅 一周学习活跃度</h4><div id="chart2" class="chart-box"></div>';
+  html+='<h4>🎯 年龄段完成率与平均得分</h4><div id="chart3" class="chart-box"></div>';
+  html+='<h4>📚 课程类别效果对比</h4><div id="chart4" class="chart-box"></div>';
+  html+='<h4>📝 各项统计分布</h4><div style="display:flex;flex-wrap:wrap;gap:16px"><div id="chart5" style="flex:1;min-width:280px;height:300px"></div><div id="chart6" style="flex:1;min-width:280px;height:300px"></div></div>';
+  html+='</div>';
+  showResult(html);
+  setTimeout(()=>renderCharts(d),100);
+}
+
+// 图表
+function renderCharts(d){
+  const colors=['#5470C6','#91CC75','#FAC858','#EE6666','#73C0DE'];
+  // 图1
+  const c1=echarts.init(document.getElementById('chart1'));
+  c1.setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},legend:{bottom:0},grid:{left:'10%',right:'5%',bottom:'20%',top:'5%'},
+    xAxis:{type:'category',data:d.age_course.categories,axisLabel:{rotate:15}},
+    yAxis:{type:'value',name:'学习次数'},
+    series:d.age_course.series.map((s,i)=>({name:s.name,type:'bar',stack:'total',data:s.data,itemStyle:{color:colors[i]}}))
+  });
+  // 图2
+  const c2=echarts.init(document.getElementById('chart2'));
+  c2.setOption({tooltip:{trigger:'axis'},grid:{left:'10%',right:'5%',bottom:'15%',top:'5%'},
+    xAxis:{type:'category',data:d.week.labels},
+    yAxis:{type:'value',name:'学习次数'},
+    series:[{type:'bar',data:d.week.data.map((v,i)=>({value:v,itemStyle:{color:i>=5?'#EE6666':'#5470C6'}})),label:{show:true,position:'top',fontWeight:'bold'}}]
+  });
+  // 图3
+  const c3=echarts.init(document.getElementById('chart3'));
+  c3.setOption({tooltip:{trigger:'axis'},legend:{data:['完成率(%)','平均得分'],bottom:0},grid:{left:'10%',right:'12%',bottom:'20%',top:'5%'},
+    xAxis:{type:'category',data:d.age_score.labels,axisLabel:{rotate:15}},
+    yAxis:[{type:'value',name:'完成率(%)',min:0,max:100},{type:'value',name:'平均得分',min:0,max:100}],
+    series:[{name:'完成率(%)',type:'bar',data:d.age_score.rate,label:{show:true,position:'top',formatter:'{c}%'}},
+      {name:'平均得分',type:'line',yAxisIndex:1,data:d.age_score.score,label:{show:true},lineStyle:{width:3},symbolSize:8}]
+  });
+  // 图4
+  const c4=echarts.init(document.getElementById('chart4'));
+  c4.setOption({tooltip:{trigger:'axis'},legend:{data:['平均得分','平均代码行数'],bottom:0},grid:{left:'10%',right:'10%',bottom:'20%',top:'5%'},
+    xAxis:{type:'category',data:d.cat_stats.labels},
+    yAxis:[{type:'value',name:'平均得分',min:0,max:100},{type:'value',name:'代码行数'}],
+    series:[{name:'平均得分',type:'bar',data:d.cat_stats.score,itemStyle:{color:'#5470C6'}},
+      {name:'平均代码行数',type:'bar',yAxisIndex:1,data:d.cat_stats.lines,itemStyle:{color:'#91CC75'}}]
+  });
+  // 图5 图6 - 用简单饼图代替
+  const c5=echarts.init(document.getElementById('chart5'));
+  c5.setOption({title:{text:'作业提交状态',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},series:[{type:'pie',radius:['30%','60%'],center:['50%','50%'],data:[{name:'已提交',value:566,itemStyle:{color:'#52c41a'}},{name:'迟交',value:90,itemStyle:{color:'#faad14'}},{name:'未提交',value:80,itemStyle:{color:'#ff4d4f'}},{name:'需重做',value:64,itemStyle:{color:'#1890ff'}}],label:{formatter:'{b}\n{d}%'}}]});
+  const c6=echarts.init(document.getElementById('chart6'));
+  c6.setOption({title:{text:'课程完成状态',left:'center',textStyle:{fontSize:14}},tooltip:{trigger:'item',formatter:'{b}: {c} ({d}%)'},series:[{type:'pie',radius:['30%','60%'],center:['50%','50%'],data:[{name:'已完成',value:862,itemStyle:{color:'#52c41a'}},{name:'未完成',value:245,itemStyle:{color:'#faad14'}},{name:'进行中',value:98,itemStyle:{color:'#1890ff'}}],label:{formatter:'{b}\n{d}%'}}]});
+  charts=[c1,c2,c3,c4,c5,c6];
+  window.addEventListener('resize',()=>charts.forEach(c=>c.resize()));
+}
+</script>
+</body>
+</html>
