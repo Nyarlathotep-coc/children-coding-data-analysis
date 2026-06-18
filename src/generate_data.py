@@ -281,7 +281,23 @@ def generate_attendance(students_df, courses_df, n=1000):
 
 
 # ==================== 主程序 ====================
-def main():
+def main(record_count=None):
+    if record_count is None:
+        print("\n" + "=" * 60)
+        print("少儿编程课程学习行为数据处理与分析")
+        print("=" * 60)
+        print("\n请选择数据条数：")
+        print("  1) 500 条")
+        print("  2) 1000 条")
+        print("  3) 1500 条（推荐）")
+        print("  4) 2000 条")
+        choice = input("\n请输入选项 (1-4)，回车默认1500条: ").strip()
+        count_map = {"1": 500, "2": 1000, "3": 1500, "4": 2000}
+        record_count = count_map.get(choice, 1500)
+    n_students = max(50, min(300, record_count // 6))
+    n_records = max(300, record_count)
+    n_assignments = max(200, record_count * 2 // 3)
+    n_attendance = max(300, record_count * 3 // 4)
     """生成所有 Mock 数据并保存为 CSV 文件"""
     output_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
     os.makedirs(output_dir, exist_ok=True)
@@ -291,7 +307,7 @@ def main():
     print("=" * 60)
 
     print("\n[1/5] 生成学生信息表...")
-    students_df = generate_students(n=200)
+    students_df = generate_students(n=n_students)
     students_path = os.path.join(output_dir, 'students.csv')
     students_df.to_csv(students_path, index=False, encoding='utf-8-sig')
     print(f"    → 生成 {len(students_df)} 条记录")
@@ -303,24 +319,25 @@ def main():
     print(f"    → 生成 {len(courses_df)} 条记录")
 
     print("\n[3/5] 生成学习记录表...")
-    records_df = generate_learning_records(students_df, courses_df, n=1200)
+    records_df = generate_learning_records(students_df, courses_df, n=n_records)
     records_path = os.path.join(output_dir, 'learning_records.csv')
     records_df.to_csv(records_path, index=False, encoding='utf-8-sig')
     print(f"    → 生成 {len(records_df)} 条记录")
 
     print("\n[4/5] 生成作业提交表...")
-    assignments_df = generate_assignments(students_df, courses_df, n=800)
+    assignments_df = generate_assignments(students_df, courses_df, n=n_assignments)
     assignments_path = os.path.join(output_dir, 'assignments.csv')
     assignments_df.to_csv(assignments_path, index=False, encoding='utf-8-sig')
     print(f"    → 生成 {len(assignments_df)} 条记录")
 
     print("\n[5/5] 生成出勤记录表...")
-    attendance_df = generate_attendance(students_df, courses_df, n=1000)
+    attendance_df = generate_attendance(students_df, courses_df, n=n_attendance)
     attendance_path = os.path.join(output_dir, 'attendance.csv')
     attendance_df.to_csv(attendance_path, index=False, encoding='utf-8-sig')
     print(f"    → 生成 {len(attendance_df)} 条记录")
 
     print("\n" + "=" * 60)
+    print(f"\n已选择 {record_count} 条数据规模")
     print("数据生成完成！文件汇总：")
     print(f"  students.csv        : {len(students_df)} 行 x {len(students_df.columns)} 列")
     print(f"  courses.csv         : {len(courses_df)} 行 x {len(courses_df.columns)} 列")
